@@ -1,0 +1,34 @@
+$ sudo apt-get update
+$ sudo apt-get install software-properties-common
+$ sudo apt-add-repository ppa:ansible/ansible
+$ sudo apt-get update
+$ sudo apt-get install ansible
+
+
+---
+- name: Install Java and Set JAVA_HOME
+  hosts: all
+  become: true
+
+  tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+
+    - name: Install OpenJDK 9
+      apt:
+        name: openjdk-9-jre
+        state: present
+
+    - name: "Fetch JAVA_HOME"
+      shell: dirname $(dirname $(readlink -f $(which javac)))
+      register: java_home
+
+    - name: Set JAVA_HOME environment variable
+      lineinfile:
+        dest: ~/.bashrc
+        line: 'export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64'
+        insertafter: EOF
+        state: present
+      environment:
+        PATH: "{{ ansible_env.PATH }}:{{ JAVA_HOME }}/bin"
